@@ -120,3 +120,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+.content-container {
+  @apply mx-auto flex max-w-(--nextra-content-width) justify-center py-12 md:justify-start pl-[max(env(safe-area-inset-left),1.5rem)] pr-[max(env(safe-area-inset-right),1.5rem)];
+}

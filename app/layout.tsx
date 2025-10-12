@@ -49,7 +49,19 @@ const navbar = (
   />
 );
 const footer = (
-  <Footer className="flex flex-col gap-4 text-sm">
+  <div className="flex flex-col gap-4 text-sm content-container">
+    <img
+      src="/logo/square-dark-foreground.svg"
+      alt="Horizontal dark foreground"
+      className="w-[3rem] dark:hidden"
+    />
+
+    <img
+      src="/logo/square-light-foreground.svg"
+      alt="Horizontal dark foreground"
+      className="w-[3rem] hidden dark:block"
+    />
+
     <div>MIT {new Date().getFullYear()} © OpenDeployments.</div>
 
     <div>
@@ -62,7 +74,7 @@ const footer = (
         Darna Digital
       </a>
     </div>
-  </Footer>
+  </div>
 );
 
 export default async function RootLayout({
@@ -90,9 +102,8 @@ export default async function RootLayout({
           pageMap={await getPageMap()}
           docsRepositoryBase="https://github.com/shuding/nextra/tree/main/docs"
           footer={footer}
-          // ... Your additional layout options
         >
-          {children}
+          <div className="min-h-screen">{children}</div>
         </Layout>
       </body>
     </html>
