@@ -13,19 +13,35 @@ export const metadata: Metadata = {
 const navbar = (
   <Navbar
     logo={
-      <div>
-        <img
-          src="/logo/horizontal-dark-foreground.svg"
-          alt="Horizontal dark foreground"
-          className="w-[12rem] dark:hidden"
-        />
+      <>
+        <div className="lg:hidden">
+          <img
+            src="/logo/square-dark-foreground.svg"
+            alt="Horizontal dark foreground"
+            className="w-[3rem] dark:hidden"
+          />
 
-        <img
-          src="/logo/horizontal-light-foreground.svg"
-          alt="Horizontal dark foreground"
-          className="w-[12rem] hidden dark:block"
-        />
-      </div>
+          <img
+            src="/logo/square-light-foreground.svg"
+            alt="Horizontal dark foreground"
+            className="w-[3rem] hidden dark:block"
+          />
+        </div>
+
+        <div className="hidden lg:block">
+          <img
+            src="/logo/horizontal-dark-foreground.svg"
+            alt="Horizontal dark foreground"
+            className="w-[12rem] dark:hidden"
+          />
+
+          <img
+            src="/logo/horizontal-light-foreground.svg"
+            alt="Horizontal dark foreground"
+            className="w-[12rem] hidden dark:block"
+          />
+        </div>
+      </>
     }
     // ... Your additional navbar options
   />
