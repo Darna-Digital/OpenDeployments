@@ -2,6 +2,7 @@ import { Footer, Layout, Navbar } from "nextra-theme-docs";
 import { Banner, Head } from "nextra/components";
 import { getPageMap } from "nextra/page-map";
 import "nextra-theme-docs/style.css";
+import "./globals.css";
 import { ReactNode } from "react";
 import { Metadata } from "next";
 
@@ -17,11 +18,18 @@ const navbar = (
   />
 );
 const footer = (
-  <Footer>
-    <div className="flex flex-col gap-4">
-      <div>MIT {new Date().getFullYear()} © OpenDeployments.</div>
+  <Footer className="flex flex-col gap-4 text-sm">
+    <div>MIT {new Date().getFullYear()} © OpenDeployments.</div>
 
-      <div>Made with ❤️ by Darna Digital</div>
+    <div>
+      Made with ❤️{" "}
+      <a
+        href="https://darnadigital.com"
+        target="_blank"
+        className="hover:underline"
+      >
+        Darna Digital
+      </a>
     </div>
   </Footer>
 );
