@@ -1,5 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="./.sst/platform/config.d.ts" />
+import { Resource } from "sst";
 
 export default $config({
   app(input) {
@@ -18,7 +19,7 @@ export default $config({
     };
   },
   async run() {
-    const stage = process.env.SST_STAGE;
+    const stage = Resource.App.stage;
 
     new sst.aws.Nextjs("OpenDeploymentsWebsite", {
       domain:
