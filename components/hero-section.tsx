@@ -25,9 +25,10 @@ export default function HeroSection() {
                   Infrastructure guides
                 </h1>
 
-                <p className="mt-8 max-w-2xl text-pretty text-lg">
+                <p className="mt-8 max-w-2xl text-muted-foreground text-pretty text-lg">
                   OpenDeployments are an open source collection of guides to
-                  help you deploy your application without 3rd party PaaS.
+                  help you deploy your application directly to major cloud
+                  providers.
                 </p>
 
                 <div className="mt-12 flex items-center gap-2">
