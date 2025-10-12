@@ -38,11 +38,12 @@ export default function HeroSection() {
                       size="lg"
                       className="rounded-xl px-5 text-base"
                     >
-                      <Link href="#link">
+                      <Link href="/get-started">
                         <span className="text-nowrap">Get started</span>
                       </Link>
                     </Button>
                   </div>
+
                   <Button
                     key={2}
                     asChild
@@ -50,8 +51,8 @@ export default function HeroSection() {
                     variant="ghost"
                     className="h-10.5 rounded-xl px-5 text-base"
                   >
-                    <Link href="#link">
-                      <span className="text-nowrap">GitHub</span>
+                    <Link href="/about">
+                      <span className="text-nowrap">About</span>
                     </Link>
                   </Button>
                 </div>
