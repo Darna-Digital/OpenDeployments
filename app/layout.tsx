@@ -5,6 +5,9 @@ import "nextra-theme-docs/style.css";
 import "./globals.css";
 import { ReactNode } from "react";
 import { Metadata } from "next";
+import { Inter } from "next/font/google";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "OpenDeployments",
@@ -81,7 +84,7 @@ export default async function RootLayout({
       >
         {/* Your additional tags should be passed as `children` of `<Head>` element */}
       </Head>
-      <body>
+      <body className={inter.className}>
         <Layout
           navbar={navbar}
           pageMap={await getPageMap()}
