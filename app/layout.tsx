@@ -35,7 +35,7 @@ const footer = (
     <div>MIT {new Date().getFullYear()} © OpenDeployments.</div>
 
     <div>
-      Made with ❤️{" "}
+      Made with ❤️ by{" "}
       <a
         href="https://darnadigital.com"
         target="_blank"
