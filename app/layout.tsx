@@ -10,7 +10,27 @@ import { Inter } from "next/font/google";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "OpenDeployments",
+  title: {
+    default: "OpenDeployments - Open Source Deployment Guides",
+    template: "%s | OpenDeployments",
+  },
+  description:
+    "Open source collection of deployment guides for Next.js, React, and modern web frameworks to AWS Lambda, Vercel, and cloud platforms.",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://opendeployments.com",
+    title: "OpenDeployments - Open Source Deployment Guides",
+    description:
+      "Open source collection of deployment guides for modern web frameworks.",
+    siteName: "OpenDeployments",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "OpenDeployments - Open Source Deployment Guides",
+    description:
+      "Open source collection of deployment guides for modern web frameworks.",
+  },
 };
 
 const navbar = (
