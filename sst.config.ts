@@ -13,7 +13,7 @@ export default $config({
           region: "us-east-1",
           profile: input.stage === "production" ? "production" : undefined,
         },
-        cloudflare: "6.6.0",
+        cloudflare: "latest",
       },
     };
   },
