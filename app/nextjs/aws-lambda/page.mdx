@@ -1,3 +1,5 @@
+import { Callout, Steps, Tabs, Cards } from 'nextra/components'
+
 export const metadata = {
   title: 'Deploy Next.js to AWS Lambda',
   description: 'Step-by-step guide for deploying Next.js applications to AWS Lambda with GitHub Actions and GitLab CI/CD pipelines.',
@@ -8,3 +10,318 @@ export const metadata = {
 }
 
 # Deploy Next.js to AWS Lambda
+
+This guide walks you through deploying a Next.js application to AWS Lambda using SST (Serverless Stack). AWS Lambda provides serverless compute with automatic scaling and pay-per-use pricing.
+
+<Callout type="info">
+AWS Lambda functions have a maximum execution time of 15 minutes and memory limits up to 10GB. For most Next.js applications, this is more than sufficient.
+</Callout>
+
+## Overview
+
+When deploying Next.js to AWS Lambda, your application is split into:
+- **Lambda functions** for server-side rendering (SSR) and API routes
+- **S3 + CloudFront** for static assets (images, CSS, JS)
+- **CloudFront CDN** for global content delivery
+
+| Component | Purpose | Cost Model |
+|-----------|---------|------------|
+| AWS Lambda | Server-side rendering & API routes | Pay per request |
+| S3 | Static asset storage | Pay per GB stored |
+| CloudFront | CDN for global delivery | Pay per GB transferred |
+
+## Prerequisites
+
+<Steps>
+
+### AWS Account Setup
+
+You need an AWS account with programmatic access:
+
+1. Create an AWS account at [aws.amazon.com](https://aws.amazon.com)
+2. Create an IAM user with appropriate permissions
+3. Generate access keys (Access Key ID and Secret Access Key)
+
+<Callout type="warning">
+Never commit AWS credentials to your repository. Always use environment variables or secrets management.
+</Callout>
+
+### Install Dependencies
+
+Install the required packages in your Next.js project:
+
+```bash
+npm install sst
+# or
+pnpm add sst
+# or
+yarn add sst
+```
+
+### Configure SST
+
+Create an `sst.config.ts` file in your project root:
+
+```ts filename="sst.config.ts"
+/// <reference path="./.sst/platform/config.d.ts" />
+
+export default $config({
+  app(input) {
+    return {
+      name: "my-nextjs-app",
+      removal: input?.stage === "production" ? "retain" : "remove",
+      home: "aws",
+      providers: {
+        aws: {
+          region: "us-east-1",
+        },
+      },
+    };
+  },
+  async run() {
+    new sst.aws.Nextjs("MyNextjsApp", {
+      domain: {
+        name: "example.com",
+        aliases: ["www.example.com"],
+      },
+    });
+  },
+});
+```
+
+</Steps>
+
+## Configuration Options
+
+### Basic Configuration
+
+The minimal configuration for deploying Next.js to AWS Lambda:
+
+```ts filename="sst.config.ts"
+new sst.aws.Nextjs("MyApp", {});
+```
+
+### Custom Domain Configuration
+
+<Tabs items={['With CloudFlare DNS', 'With Route53', 'Without Domain']}>
+  <Tabs.Tab>
+```ts filename="sst.config.ts"
+new sst.aws.Nextjs("MyApp", {
+  domain: {
+    name: "example.com",
+    dns: sst.cloudflare.dns(),
+    aliases: ["www.example.com"],
+  },
+});
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+```ts filename="sst.config.ts"
+new sst.aws.Nextjs("MyApp", {
+  domain: {
+    name: "example.com",
+    dns: sst.aws.dns(),
+  },
+});
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+```ts filename="sst.config.ts"
+new sst.aws.Nextjs("MyApp", {});
+```
+
+SST will provide a CloudFront URL for your deployment.
+  </Tabs.Tab>
+</Tabs>
+
+### Environment-Specific Configuration
+
+Configure different settings for staging and production:
+
+```ts filename="sst.config.ts"
+export default $config({
+  app(input) {
+    return {
+      name: "my-app",
+      removal: input?.stage === "production" ? "retain" : "remove",
+      protect: ["production"].includes(input?.stage),
+      home: "aws",
+      providers: {
+        aws: {
+          region: "us-east-1",
+          profile: input.stage === "production" ? "production" : undefined,
+        },
+      },
+    };
+  },
+  async run() {
+    const isProduction = $app.stage === "production";
+
+    new sst.aws.Nextjs("MyApp", {
+      domain: isProduction
+        ? {
+            name: "example.com",
+            aliases: ["www.example.com"],
+          }
+        : undefined,
+    });
+  },
+});
+```
+
+### Advanced Lambda Configuration
+
+Customize Lambda function settings:
+
+```ts filename="sst.config.ts"
+new sst.aws.Nextjs("MyApp", {
+  server: {
+    memory: "1024 MB",
+    timeout: "20 seconds",
+  },
+  environment: {
+    DATABASE_URL: process.env.DATABASE_URL,
+    API_KEY: process.env.API_KEY,
+  },
+});
+```
+
+## Deployment Methods
+
+<Cards>
+  <Cards.Card title="GitHub Actions" href="/nextjs/aws-lambda/github" />
+  <Cards.Card title="GitLab CI" href="/nextjs/aws-lambda/gitlab" />
+</Cards>
+
+## Local Development
+
+Test your SST configuration locally before deploying:
+
+```bash
+pnpm sst dev
+```
+
+This starts a local development server with your AWS resources connected.
+
+## Deployment Commands
+
+### Deploy to Staging
+
+```bash
+pnpm sst deploy --stage=staging
+```
+
+### Deploy to Production
+
+```bash
+pnpm sst deploy --stage=production
+```
+
+### Remove a Stage
+
+```bash
+pnpm sst remove --stage=staging
+```
+
+<Callout type="warning">
+Be careful when removing production stages. Set `removal: "retain"` in your config to prevent accidental deletion.
+</Callout>
+
+## Cost Optimization
+
+### Lambda Optimization Tips
+
+| Optimization | Impact | Implementation |
+|--------------|--------|----------------|
+| Memory allocation | 🟢 High | Adjust based on profiling |
+| Cold start reduction | 🟡 Medium | Use provisioned concurrency |
+| Asset optimization | 🟢 High | Enable image optimization |
+
+### Example Cost Breakdown
+
+For a typical Next.js site with **100,000 monthly requests**:
+
+- **Lambda**: ~$2-5/month
+- **S3**: ~$0.50/month
+- **CloudFront**: ~$1-3/month
+- **Total**: ~$3.50-8.50/month
+
+<Callout>
+Actual costs vary based on traffic patterns, asset size, and region.
+</Callout>
+
+## Troubleshooting
+
+### Common Issues
+
+#### Cold Starts
+
+Lambda functions experience cold starts when not recently invoked. Solutions:
+
+- Increase memory allocation (faster initialization)
+- Use provisioned concurrency for critical paths
+- Optimize bundle size
+
+```ts filename="sst.config.ts"
+new sst.aws.Nextjs("MyApp", {
+  server: {
+    memory: "2048 MB",
+  },
+});
+```
+
+#### Timeout Errors
+
+If requests exceed Lambda timeout:
+
+```ts filename="sst.config.ts"
+new sst.aws.Nextjs("MyApp", {
+  server: {
+    timeout: "30 seconds",
+  },
+});
+```
+
+#### Environment Variables Not Working
+
+Ensure environment variables are properly configured:
+
+```ts filename="sst.config.ts"
+new sst.aws.Nextjs("MyApp", {
+  environment: {
+    NODE_ENV: $app.stage === "production" ? "production" : "development",
+    DATABASE_URL: process.env.DATABASE_URL,
+  },
+});
+```
+
+<Callout type="error">
+Never hardcode secrets in your config file. Use environment variables or AWS Secrets Manager.
+</Callout>
+
+## Performance Monitoring
+
+### CloudWatch Metrics
+
+Monitor your Lambda functions in AWS CloudWatch:
+
+- **Invocations**: Request count
+- **Duration**: Execution time
+- **Errors**: Failed requests
+- **Throttles**: Rate limit hits
+
+### Logging
+
+Access logs with SST CLI:
+
+```bash
+pnpm sst logs --stage=production
+```
+
+## Next Steps
+
+<Cards>
+  <Cards.Card title="Set up GitHub Actions" href="/nextjs/aws-lambda/github" />
+  <Cards.Card title="Set up GitLab CI" href="/nextjs/aws-lambda/gitlab" />
+  <Cards.Card title="Learn about SST" href="https://sst.dev" />
+</Cards>

@@ -1,3 +1,5 @@
+import { Callout, Steps, Tabs, FileTree } from 'nextra/components'
+
 export const metadata = {
   title: 'Deploy Next.js to AWS Lambda with GitLab CI',
   description: 'Complete GitLab CI/CD pipeline configuration for deploying Next.js applications to AWS Lambda with automated workflows.',
@@ -8,3 +10,591 @@ export const metadata = {
 }
 
 # Deploy Next.js to AWS Lambda with GitLab CI
+
+Automate your Next.js deployments to AWS Lambda using GitLab CI/CD. This guide covers setting up pipelines for staging and production environments with GitLab's native CI/CD features.
+
+## Prerequisites
+
+<Steps>
+
+### Configure AWS Credentials
+
+Store your AWS credentials as GitLab CI/CD variables:
+
+1. Navigate to your project on GitLab
+2. Go to **Settings** → **CI/CD** → **Variables**
+3. Click **Add variable**
+4. Add the following variables:
+
+| Variable Name | Description | Protected | Masked |
+|---------------|-------------|-----------|--------|
+| `AWS_ACCESS_KEY_ID` | Your AWS access key ID | ✓ | ✓ |
+| `AWS_SECRET_ACCESS_KEY` | Your AWS secret access key | ✓ | ✓ |
+
+<Callout type="warning">
+Enable "Protected" for production variables and "Masked" to hide values in logs.
+</Callout>
+
+### Set Up AWS IAM Permissions
+
+Your IAM user needs permissions for Lambda, CloudFormation, S3, CloudFront, and related services:
+
+```json filename="iam-policy.json"
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "lambda:*",
+        "cloudformation:*",
+        "s3:*",
+        "cloudfront:*",
+        "iam:*",
+        "apigateway:*",
+        "route53:*",
+        "acm:*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+<Callout type="info">
+For production, refine these permissions following the principle of least privilege.
+</Callout>
+
+### Optional: CloudFlare Variables
+
+If using CloudFlare for DNS, add these variables:
+
+| Variable Name | Description | Protected | Masked |
+|---------------|-------------|-----------|--------|
+| `CLOUDFLARE_API_TOKEN` | CloudFlare API token | ✓ | ✓ |
+| `CLOUDFLARE_DEFAULT_ACCOUNT_ID` | CloudFlare account ID | ✓ | - |
+| `CLOUDFLARE_EMAIL` | CloudFlare account email | - | - |
+
+</Steps>
+
+## Pipeline Configuration
+
+### Production & Staging Deployment
+
+Create a GitLab CI/CD pipeline with automatic deployments:
+
+<FileTree>
+  <FileTree.File name=".gitlab-ci.yml" />
+</FileTree>
+
+```yaml filename=".gitlab-ci.yml" copy
+image: node:22
+
+stages:
+  - deploy
+
+variables:
+  AWS_REGION: us-east-1
+  AWS_SDK_LOAD_CONFIG: "1"
+
+cache:
+  key:
+    files:
+      - pnpm-lock.yaml
+  paths:
+    - .pnpm-store
+
+before_script:
+  - curl -fsSL https://get.pnpm.io/install.sh | sh -
+  - export PNPM_HOME="$HOME/.local/share/pnpm"
+  - export PATH="$PNPM_HOME:$PATH"
+  - pnpm config set store-dir .pnpm-store
+  - pnpm install --frozen-lockfile
+
+deploy:staging:
+  stage: deploy
+  environment:
+    name: staging
+    url: https://staging.example.com
+  only:
+    - develop
+  script:
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws configure set region $AWS_REGION
+    - pnpm sst deploy --stage=staging
+
+deploy:production:
+  stage: deploy
+  environment:
+    name: production
+    url: https://example.com
+  only:
+    - main
+  when: manual
+  script:
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws configure set region $AWS_REGION
+    - pnpm sst deploy --stage=production
+```
+
+## Pipeline Breakdown
+
+### Stage Configuration
+
+GitLab CI/CD pipelines are organized into stages:
+
+```yaml
+stages:
+  - test
+  - build
+  - deploy
+```
+
+Jobs in the same stage run in parallel. Stages execute sequentially.
+
+### Cache Configuration
+
+Speed up pipeline execution by caching dependencies:
+
+```yaml
+cache:
+  key:
+    files:
+      - pnpm-lock.yaml
+  paths:
+    - .pnpm-store
+```
+
+| Setting | Description |
+|---------|-------------|
+| `key.files` | Cache key based on lock file hash |
+| `paths` | Directories to cache between jobs |
+
+<Callout type="info">
+Cache persists across pipeline runs, reducing install time significantly.
+</Callout>
+
+### Branch Rules
+
+Control when jobs run using `only` and `except`:
+
+<Tabs items={['only', 'except', 'rules']}>
+  <Tabs.Tab>
+```yaml
+deploy:staging:
+  only:
+    - develop
+    - /^feature\/.*$/
+```
+Runs only on `develop` branch and feature branches.
+  </Tabs.Tab>
+  <Tabs.Tab>
+```yaml
+deploy:production:
+  except:
+    - develop
+    - /^feature\/.*$/
+```
+Runs on all branches except `develop` and feature branches.
+  </Tabs.Tab>
+  <Tabs.Tab>
+```yaml
+deploy:production:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+    - when: never
+```
+Modern syntax with conditional logic.
+  </Tabs.Tab>
+</Tabs>
+
+### Environment Configuration
+
+Use GitLab Environments for deployment tracking:
+
+```yaml
+environment:
+  name: production
+  url: https://example.com
+  on_stop: stop_production
+```
+
+Benefits:
+- **Deployment history** in GitLab UI
+- **Environment-specific variables**
+- **Manual approval** with `when: manual`
+- **Auto-stop** environments
+
+### Package Manager Setup
+
+<Tabs items={['pnpm', 'npm', 'yarn']}>
+  <Tabs.Tab>
+```yaml
+before_script:
+  - curl -fsSL https://get.pnpm.io/install.sh | sh -
+  - export PNPM_HOME="$HOME/.local/share/pnpm"
+  - export PATH="$PNPM_HOME:$PATH"
+  - pnpm config set store-dir .pnpm-store
+  - pnpm install --frozen-lockfile
+
+cache:
+  paths:
+    - .pnpm-store
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+```yaml
+before_script:
+  - npm ci
+
+cache:
+  paths:
+    - node_modules/
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+```yaml
+before_script:
+  - yarn install --frozen-lockfile
+
+cache:
+  paths:
+    - node_modules/
+    - .yarn
+```
+  </Tabs.Tab>
+</Tabs>
+
+## Advanced Configurations
+
+### With CloudFlare DNS
+
+Add CloudFlare variables to your deployment job:
+
+```yaml {8-10,21-23}
+variables:
+  AWS_REGION: us-east-1
+  AWS_SDK_LOAD_CONFIG: "1"
+
+deploy:production:
+  stage: deploy
+  environment: production
+  variables:
+    CLOUDFLARE_API_TOKEN: $CLOUDFLARE_API_TOKEN
+    CLOUDFLARE_DEFAULT_ACCOUNT_ID: $CLOUDFLARE_DEFAULT_ACCOUNT_ID
+    CLOUDFLARE_EMAIL: $CLOUDFLARE_EMAIL
+  only:
+    - main
+  script:
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws configure set region $AWS_REGION
+    - pnpm sst deploy --stage=production
+```
+
+### With Testing Stage
+
+Add automated testing before deployment:
+
+```yaml
+stages:
+  - test
+  - deploy
+
+test:lint:
+  stage: test
+  script:
+    - pnpm lint
+
+test:typecheck:
+  stage: test
+  script:
+    - pnpm tsc --noEmit
+
+test:unit:
+  stage: test
+  coverage: '/Lines\s*:\s*(\d+\.\d+)%/'
+  script:
+    - pnpm test --coverage
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+
+deploy:staging:
+  stage: deploy
+  needs:
+    - test:lint
+    - test:typecheck
+    - test:unit
+  script:
+    - pnpm sst deploy --stage=staging
+```
+
+### With Build Artifacts
+
+Cache SST build outputs between jobs:
+
+```yaml
+deploy:staging:
+  stage: deploy
+  artifacts:
+    paths:
+      - .sst/
+    expire_in: 1 week
+  script:
+    - pnpm sst deploy --stage=staging
+```
+
+### With Notifications
+
+Send deployment notifications to Slack:
+
+```yaml
+deploy:production:
+  stage: deploy
+  script:
+    - pnpm sst deploy --stage=production
+  after_script:
+    - |
+      curl -X POST $SLACK_WEBHOOK_URL \
+        -H 'Content-Type: application/json' \
+        -d "{
+          \"text\": \"Production deployment $CI_JOB_STATUS\",
+          \"username\": \"GitLab CI\",
+          \"icon_emoji\": \":rocket:\"
+        }"
+```
+
+### With Manual Approval
+
+Require manual approval for production deployments:
+
+```yaml
+deploy:production:
+  stage: deploy
+  environment:
+    name: production
+  only:
+    - main
+  when: manual
+  allow_failure: false
+  script:
+    - pnpm sst deploy --stage=production
+```
+
+<Callout>
+Setting `allow_failure: false` prevents the pipeline from succeeding if deployment is skipped.
+</Callout>
+
+## Multi-Environment Pipeline
+
+Complete pipeline with staging, production, and review apps:
+
+```yaml filename=".gitlab-ci.yml"
+image: node:22
+
+stages:
+  - test
+  - deploy
+  - cleanup
+
+variables:
+  AWS_REGION: us-east-1
+  AWS_SDK_LOAD_CONFIG: "1"
+
+cache:
+  key:
+    files:
+      - pnpm-lock.yaml
+  paths:
+    - .pnpm-store
+
+before_script:
+  - curl -fsSL https://get.pnpm.io/install.sh | sh -
+  - export PNPM_HOME="$HOME/.local/share/pnpm"
+  - export PATH="$PNPM_HOME:$PATH"
+  - pnpm config set store-dir .pnpm-store
+  - pnpm install --frozen-lockfile
+
+test:
+  stage: test
+  script:
+    - pnpm lint
+    - pnpm tsc --noEmit
+    - pnpm test
+
+deploy:review:
+  stage: deploy
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG
+    url: https://$CI_COMMIT_REF_SLUG.review.example.com
+    on_stop: stop:review
+    auto_stop_in: 1 week
+  only:
+    - merge_requests
+  script:
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws configure set region $AWS_REGION
+    - pnpm sst deploy --stage=review-$CI_COMMIT_REF_SLUG
+
+stop:review:
+  stage: cleanup
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG
+    action: stop
+  only:
+    - merge_requests
+  when: manual
+  script:
+    - pnpm sst remove --stage=review-$CI_COMMIT_REF_SLUG
+
+deploy:staging:
+  stage: deploy
+  environment:
+    name: staging
+    url: https://staging.example.com
+  only:
+    - develop
+  script:
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws configure set region $AWS_REGION
+    - pnpm sst deploy --stage=staging
+
+deploy:production:
+  stage: deploy
+  environment:
+    name: production
+    url: https://example.com
+  only:
+    - main
+  when: manual
+  script:
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws configure set region $AWS_REGION
+    - pnpm sst deploy --stage=production
+```
+
+### Review Apps Explained
+
+Review apps create temporary environments for merge requests:
+
+| Feature | Benefit |
+|---------|---------|
+| Dynamic environments | One per merge request |
+| Auto-generated URLs | Easy access to preview |
+| Auto-cleanup | Removes old environments |
+| Cost-effective | Only runs when needed |
+
+## Using GitLab Runner Tags
+
+Assign jobs to specific runners:
+
+```yaml
+deploy:production:
+  stage: deploy
+  tags:
+    - docker
+    - aws
+    - production
+  script:
+    - pnpm sst deploy --stage=production
+```
+
+## Troubleshooting
+
+### Pipeline Fails with "Command not found"
+
+<Callout type="error">
+**Error**: bash: aws: command not found
+</Callout>
+
+**Solution**: Install AWS CLI in your `before_script`:
+
+```yaml
+before_script:
+  - apt-get update && apt-get install -y awscli
+  - pnpm install --frozen-lockfile
+```
+
+Or use a Docker image with AWS CLI pre-installed:
+
+```yaml
+image: node:22
+
+before_script:
+  - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  - unzip awscliv2.zip
+  - ./aws/install
+```
+
+### Cache Not Working
+
+If cache isn't speeding up builds:
+
+```yaml
+cache:
+  key:
+    files:
+      - pnpm-lock.yaml
+  paths:
+    - .pnpm-store
+  policy: pull-push
+```
+
+| Policy | Description |
+|--------|-------------|
+| `pull-push` | Download and upload cache |
+| `pull` | Only download cache |
+| `push` | Only upload cache |
+
+### Variables Not Available
+
+Ensure variables are not protected if running on unprotected branches:
+
+1. Go to **Settings** → **CI/CD** → **Variables**
+2. Edit the variable
+3. Uncheck **Protected** for non-production variables
+
+<Callout type="warning">
+Keep production credentials protected and limit to `main` branch.
+</Callout>
+
+### Job Timeout
+
+Increase job timeout for long deployments:
+
+```yaml
+deploy:production:
+  stage: deploy
+  timeout: 30m
+  script:
+    - pnpm sst deploy --stage=production
+```
+
+Default timeout is 1 hour.
+
+## Best Practices
+
+| Practice | Benefit |
+|----------|---------|
+| Use protected variables | Secure credentials |
+| Enable manual approval | Control production deployments |
+| Use environments | Track deployment history |
+| Cache dependencies | Faster pipeline execution |
+| Run tests before deploy | Catch errors early |
+| Use review apps | Test in isolation |
+| Set up notifications | Stay informed of deployments |
+
+## Next Steps
+
+- [Configure GitHub Actions](/nextjs/aws-lambda/github)
+- [Back to AWS Lambda guide](/nextjs/aws-lambda)
+- [Learn more about GitLab CI/CD](https://docs.gitlab.com/ee/ci/)
