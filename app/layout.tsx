@@ -43,7 +43,6 @@ const navbar = (
         </div>
       </>
     }
-    // ... Your additional navbar options
   />
 );
 const footer = (
