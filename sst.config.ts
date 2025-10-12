@@ -1,6 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="./.sst/platform/config.d.ts" />
-import { Resource } from "sst";
 
 export default $config({
   app(input) {
@@ -19,17 +18,16 @@ export default $config({
     };
   },
   async run() {
-    const stage = Resource.App.stage;
+    const isProduction = $app.stage === "production";
 
     new sst.aws.Nextjs("OpenDeploymentsWebsite", {
-      domain:
-        stage === "production"
-          ? {
-              name: "opendeployments.com",
-              dns: sst.cloudflare.dns(),
-              aliases: ["www.opendeployments.com"],
-            }
-          : undefined,
+      domain: isProduction
+        ? {
+            name: "opendeployments.com",
+            dns: sst.cloudflare.dns(),
+            aliases: ["www.opendeployments.com"],
+          }
+        : undefined,
     });
   },
 });
