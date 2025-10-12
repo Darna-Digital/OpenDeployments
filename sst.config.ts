@@ -8,9 +8,27 @@ export default $config({
       removal: input?.stage === "production" ? "retain" : "remove",
       protect: ["production"].includes(input?.stage),
       home: "aws",
+      providers: {
+        aws: {
+          region: "us-east-1",
+          profile: input.stage === "production" ? "production" : undefined,
+        },
+        cloudflare: "6.6.0",
+      },
     };
   },
   async run() {
-    new sst.aws.Nextjs("MyWeb");
+    const stage = process.env.SST_STAGE;
+
+    new sst.aws.Nextjs("OpenDeploymentsWebsite", {
+      domain:
+        stage === "production"
+          ? {
+              name: "opendeployments.com",
+              dns: sst.cloudflare.dns(),
+              aliases: ["www.opendeployments.com"],
+            }
+          : undefined,
+    });
   },
 });
