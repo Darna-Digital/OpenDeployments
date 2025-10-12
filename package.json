@@ -3,18 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
     "build": "next build --turbopack",
+    "dev": "next dev --turbopack",
+    "lint": "eslint",
     "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind",
-    "start": "next start",
-    "lint": "eslint"
+    "start": "next start"
   },
   "dependencies": {
     "next": "15.5.4",
     "nextra": "^4.6.0",
     "nextra-theme-docs": "^4.6.0",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "sst": "3.17.19"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

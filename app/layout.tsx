@@ -16,7 +16,15 @@ const navbar = (
     // ... Your additional navbar options
   />
 );
-const footer = <Footer>MIT {new Date().getFullYear()} © Nextra.</Footer>;
+const footer = (
+  <Footer>
+    <div className="flex flex-col gap-4">
+      <div>MIT {new Date().getFullYear()} © OpenDeployments.</div>
+
+      <div>Made with ❤️ by Darna Digital</div>
+    </div>
+  </Footer>
+);
 
 export default async function RootLayout({
   children,
