@@ -66,6 +66,7 @@ const navbar = (
         </div>
       </>
     }
+    projectLink="https://github.com/darna-digital/open-deployments"
   />
 );
 const footer = (
