@@ -121,7 +121,7 @@ export default async function RootLayout({
         <Layout
           navbar={navbar}
           pageMap={await getPageMap()}
-          docsRepositoryBase="https://github.com/Darna-Digital/OpenDeployments"
+          docsRepositoryBase="https://github.com/Darna-Digital/OpenDeployments/blob/main"
           footer={footer}
         >
           <div className="min-h-screen">{children}</div>
