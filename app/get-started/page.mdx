@@ -1,22 +1,31 @@
-import { Cards, Callout } from 'nextra/components'
+import StackIcon from "tech-stack-icons";
+import Link from "next/link";
+import TechStackCard from "@/components/tech-stack-card";
 
 # Get started
 
-Welcome to OpenDeploys! Choose your framework and deployment platform to get started with deploying your application.
+Welcome to OpenDeploys!
 
-<Callout type="info">
-OpenDeploys provides secure, scalable deployment guides that work directly with your CI/CD pipeline and are completely platform-agnostic.
-</Callout>
+Get started by configuring infrastructure providers:
+
+<div className="grid mt-4 gap-8 lg:grid-cols-2">
+  <TechStackCard
+    href="/providers/aws-iac"
+    title="Amazon Web Services"
+    icon="aws"
+  />
+
+   <TechStackCard
+    href="/providers/cloudflare-iac"
+    title="Cloudflare"
+    icon="cloudflare"
+  />
+</div>
 
 ## Frameworks
 
-<Cards>
-  <Cards.Card title="Next.js" href="/nextjs" />
-</Cards>
+Then pick a framework you want to deploy:
 
-## Quick Links
-
-<Cards>
-  <Cards.Card title="About OpenDeploys" href="/about" />
-  <Cards.Card title="AWS Lambda Deployment" href="/nextjs/aws-lambda" />
-</Cards>
+<div className="grid mt-4 gap-8 lg:grid-cols-2">
+  <TechStackCard href="/nextjs" title="Next.js" icon="nextjs" />
+</div>
