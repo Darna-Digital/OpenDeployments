@@ -6,5 +6,5 @@ export default {
   about: "About",
   "get-started": "Get Started",
   providers: "Providers",
-  nextjs: "Next.js",
+  frameworks: "Frameworks",
 };
