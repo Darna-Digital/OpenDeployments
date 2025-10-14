@@ -9,7 +9,7 @@ interface Props {
   className?: string;
 }
 
-export default function TechStackCard({ title, href, icon, className }: Props) {
+export default function TechStack({ title, href, icon, className }: Props) {
   return (
     <Link
       href={href}
