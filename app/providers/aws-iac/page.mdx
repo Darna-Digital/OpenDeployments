@@ -1,63 +1,67 @@
+import { Callout, Steps } from "nextra/components";
+
 # AWS IAC
 
-## Use AWS with Infrastructure As Code
+## Configuring AWS
 
 To deploy and manage infrastructure on AWS, you'll need to set up AWS credentials with programmatic access. This involves creating an IAM user with the necessary permissions and obtaining AWS Access Keys.
-Having an IAM user will allow you to provision infrastructure through code. So instead of configuring the AWS dashboard manually, you will specify what you need in code.
 
-## Prerequisites
+<Steps>
 
-- An AWS account
-- Administrative access to create IAM users and policies
+    ### Log in to your AWS Console
 
-## Step 1: Create an IAM User
+    Go to [AWS Console](https://console.aws.amazon.com/) and sign in with your account.
 
-1. Sign in to the [AWS Management Console](https://console.aws.amazon.com/)
-2. Navigate to **IAM** (Identity and Access Management)
-3. In the left sidebar, click **Users**
-4. Click **Create user**
-5. Enter a username (e.g., `terraform-user` or `iac-deployment-user`)
-6. Select **Programmatic access** for access type
-7. Click **Next: Permissions**
+    ### Go to IAM (Identity and Access Management)
 
-## Step 2: Attach Policies
+    Navigate to IAM from the AWS services menu or search for "IAM" in the search bar.
 
-For infrastructure management, you'll need appropriate permissions. Choose one of the following approaches:
+    ### Navigate to "Users" in the left sidebar
 
-### Option A: Full Administrative Access (Simplest)
+    In the IAM dashboard, click on "Users" from the left navigation menu.
 
-- Attach the **AdministratorAccess** policy
-- ⚠️ **Warning**: This grants full access to your AWS account. Only use for development/testing.
+    ### Select or create a user
 
-### Option B: Custom Policy (Recommended for Production)
+    Either select an existing user or create a new one by clicking "Create user".
 
-Create a custom policy with only the permissions your infrastructure needs:
+    ### Attach security policies for this user
 
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ec2:*",
-        "s3:*",
-        "lambda:*",
-        "iam:*",
-        "cloudformation:*",
-        "route53:*",
-        "acm:*"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-```
+    To do that, go to:
 
-## Step 3: Get Your Access Keys
+    - IAM → Policies
+    - Create a new policy
 
-1. Click **Next: Tags** (optional)
-2. Click **Next: Review**
-3. Click **Create user**
-4. **Important**: Copy both the **Access Key ID** and **Secret Access Key**
-5. Store these securely - the secret key will not be shown again
+    <Callout type="info">
+        Use a dedicated IAM user with minimal required permissions for your application resources. This will depend on the infrastructure your app requires.
+
+        If you don't know the exact resources your app will need, you can start with with a permissive option, and later add more protections once you have your CI/CD going.
+
+    </Callout>
+
+    ### Configure access keys
+
+    Under the "Security credentials" tab:
+
+    For a new user: Click "Create access key"
+    For an existing user: Click "Create access key" in the "Access keys" section
+
+    When you create the access key:
+
+    - The **AWS_ACCESS_KEY_ID** is the "Access key ID"
+    - The **AWS_SECRET_ACCESS_KEY** is the "Secret access key"
+
+    <Callout type="warning">
+        **Security notes:**
+        <div>
+            - Make sure to save these credentials immediately when they're shown - the
+            secret access key cannot be retrieved again after initial creation
+        </div>
+
+        <div>
+            - Never commit these credentials to your repository as they could be visible
+            in the Git history later on
+        </div>
+
+    </Callout>
+
+</Steps>
