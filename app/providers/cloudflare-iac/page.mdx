@@ -2,4 +2,226 @@
 
 ## Use Cloudflare with Infrastructure As Code
 
-To get started, you will need an IAM user.
+To manage DNS records and other Cloudflare services programmatically, you'll need to set up API credentials. Cloudflare offers multiple authentication methods, with API tokens being the recommended approach for modern Infrastructure as Code deployments.
+
+## Prerequisites
+
+- A Cloudflare account
+- At least one domain added to Cloudflare
+- Domain must be using Cloudflare nameservers
+
+## Authentication Methods
+
+Cloudflare provides two main authentication methods:
+
+### 1. API Tokens (Recommended)
+- More secure with fine-grained permissions
+- Can be scoped to specific zones and resources
+- Supports IP restrictions and TTL
+
+### 2. Global API Key (Legacy)
+- Full account access
+- Less secure but simpler to set up
+- Not recommended for production use
+
+## Method 1: API Token (Recommended)
+
+### Step 1: Create an API Token
+
+1. Log in to the [Cloudflare Dashboard](https://dash.cloudflare.com/)
+2. Go to **My Profile** → **API Tokens**
+3. Click **Create Token**
+4. Choose **Custom token** for maximum control
+
+### Step 2: Configure Token Permissions
+
+Set the following permissions based on your needs:
+
+#### For DNS Management:
+- **Zone** → **Zone Settings** → **Read**
+- **Zone** → **Zone** → **Read** 
+- **Zone** → **DNS** → **Edit**
+
+#### For Additional Services (optional):
+- **Zone** → **Page Rules** → **Edit**
+- **Zone** → **SSL/TLS** → **Edit**
+- **Account** → **Cloudflare Tunnel** → **Edit**
+
+### Step 3: Scope the Token
+
+1. **Zone Resources**: 
+   - Select **Include** → **Specific zone** → choose your domain(s)
+   - Or select **All zones** for account-wide access
+
+2. **Account Resources** (if needed):
+   - Select your account
+
+3. **Client IP Address Filtering** (optional but recommended):
+   - Add your server/CI IP addresses for extra security
+
+4. **TTL** (optional):
+   - Set an expiration date for the token
+
+### Step 4: Get Your Token
+
+1. Click **Continue to summary**
+2. Review the permissions
+3. Click **Create Token**
+4. **Important**: Copy the token immediately - it won't be shown again
+5. Test the token using the provided curl command
+
+## Method 2: Global API Key (Legacy)
+
+### Step 1: Get Your Global API Key
+
+1. Log in to the [Cloudflare Dashboard](https://dash.cloudflare.com/)
+2. Go to **My Profile** → **API Tokens**
+3. In the **Global API Key** section, click **View**
+4. Enter your password to reveal the key
+5. Copy the API key
+
+### Step 2: Get Your Account Email
+
+You'll need your Cloudflare account email address along with the global API key.
+
+## Environment Configuration
+
+### For API Token (Recommended)
+
+Set this environment variable:
+
+```bash
+export CLOUDFLARE_API_TOKEN="your-api-token-here"
+```
+
+### For Global API Key
+
+Set these environment variables:
+
+```bash
+export CLOUDFLARE_EMAIL="your-email@example.com"
+export CLOUDFLARE_API_KEY="your-global-api-key-here"
+```
+
+## Tool-Specific Configuration
+
+### Terraform
+Create a `provider.tf` file:
+
+```hcl
+terraform {
+  required_providers {
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 4.0"
+    }
+  }
+}
+
+# Using API Token (recommended)
+provider "cloudflare" {
+  api_token = var.cloudflare_api_token
+}
+
+# Or using Global API Key
+provider "cloudflare" {
+  email   = var.cloudflare_email
+  api_key = var.cloudflare_api_key
+}
+```
+
+### Pulumi
+```typescript
+import * as cloudflare from "@pulumi/cloudflare";
+
+// API Token will be read from CLOUDFLARE_API_TOKEN environment variable
+// Or Global API Key from CLOUDFLARE_EMAIL and CLOUDFLARE_API_KEY
+```
+
+## Common DNS Operations
+
+### Create DNS Records
+
+```hcl
+# A Record
+resource "cloudflare_record" "example" {
+  zone_id = var.cloudflare_zone_id
+  name    = "example"
+  content = "192.0.2.1"
+  type    = "A"
+  ttl     = 3600
+}
+
+# CNAME Record
+resource "cloudflare_record" "www" {
+  zone_id = var.cloudflare_zone_id
+  name    = "www"
+  content = "example.com"
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+}
+```
+
+### Get Zone ID
+
+You'll need your zone ID for most operations:
+
+```bash
+curl -X GET "https://api.cloudflare.com/client/v4/zones" \
+  -H "Authorization: Bearer YOUR_API_TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+Or find it in the Cloudflare Dashboard under your domain's **Overview** tab.
+
+## Security Best Practices
+
+1. **Use API Tokens**: Prefer API tokens over global API keys
+2. **Least Privilege**: Only grant permissions your application needs
+3. **Scope Restrictions**: Limit tokens to specific zones when possible
+4. **IP Restrictions**: Restrict tokens to known IP addresses
+5. **Token Rotation**: Regularly rotate API tokens
+6. **Environment Variables**: Store credentials in environment variables, not code
+7. **Secure Storage**: Use secure secret management in production
+
+## Verification
+
+Test your API access:
+
+```bash
+# Using API Token
+curl -X GET "https://api.cloudflare.com/client/v4/user/tokens/verify" \
+  -H "Authorization: Bearer YOUR_API_TOKEN" \
+  -H "Content-Type: application/json"
+
+# Using Global API Key
+curl -X GET "https://api.cloudflare.com/client/v4/user" \
+  -H "X-Auth-Email: your-email@example.com" \
+  -H "X-Auth-Key: YOUR_GLOBAL_API_KEY" \
+  -H "Content-Type: application/json"
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **403 Forbidden**: Check token permissions and zone scope
+2. **401 Unauthorized**: Verify token/key is correct and not expired
+3. **Zone not found**: Ensure zone ID is correct and token has zone access
+4. **Rate limiting**: Respect API rate limits (1200 requests per 5 minutes)
+
+### Getting Help
+
+- Check the [Cloudflare API documentation](https://developers.cloudflare.com/api/)
+- Use the Cloudflare community forums
+- Enable debug logging in your IaC tool for detailed error messages
+
+## Next Steps
+
+With your Cloudflare credentials configured, you can now:
+- Manage DNS records programmatically
+- Automate SSL certificate management
+- Configure page rules and redirects
+- Set up Cloudflare Tunnel endpoints
+- Integrate DNS management into CI/CD pipelines
