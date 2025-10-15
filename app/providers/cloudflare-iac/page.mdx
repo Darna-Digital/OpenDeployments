@@ -15,6 +15,7 @@ graph TB
         CF[CloudFront Distribution]
         S3[S3 Bucket]
         Lambda[Lambda Functions]
+        Fargate[Fargate]
     end
 
     subgraph "Cloudflare"
@@ -30,8 +31,9 @@ graph TB
     DNS --> ALB
     DNS --> CF
 
-    ALB --> Lambda
-    CF --> S3
+    Lambda --> CF
+    S3 --> Lambda
+    ALB --> Fargate
 
 ```
 
