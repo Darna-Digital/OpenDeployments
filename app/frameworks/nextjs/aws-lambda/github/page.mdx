@@ -1,4 +1,4 @@
-import { Steps } from "nextra/components";
+import { Steps, Callout } from "nextra/components";
 
 export const metadata = {
   title: "Deploy Next.js to AWS Lambda with GitHub Actions",
@@ -26,7 +26,7 @@ You can do this by following the [get started](/get-started) guide.
 
 This example works with the "main" branch.
 
-```ts
+```yaml
 name: Deploy Production
 
 on:
@@ -90,7 +90,50 @@ jobs:
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws configure set region ${{ env.AWS_REGION }}
           pnpm sst deploy --stage=${{ env.STAGE }}
+```
 
+<Callout type="info">
+  Remember to add the secrets in your GitHub repository environment
+  configuration.
+</Callout>
+
+## Setup SST
+
+2.1. Add sst.config.ts configuration
+2.2 This example uses "open-deployments" name. Name it by your own app name.
+2.3 This example uses opendeployments.com domain. Use your own domain name.
+
+```ts
+export default $config({
+  app(input) {
+    return {
+      name: "open-deployments",
+      removal: input?.stage === "production" ? "retain" : "remove",
+      protect: ["production"].includes(input?.stage),
+      home: "aws",
+      providers: {
+        aws: {
+          region: "us-east-1",
+          profile: input.stage === "production" ? "production" : undefined,
+        },
+        cloudflare: "latest",
+      },
+    };
+  },
+  async run() {
+    const isProduction = $app.stage === "production";
+
+    new sst.aws.Nextjs("OpenDeploymentsWebsite", {
+      domain: isProduction
+        ? {
+            name: "opendeployments.com",
+            dns: sst.cloudflare.dns(),
+            aliases: ["www.opendeployments.com"],
+          }
+        : undefined,
+    });
+  },
+});
 ```
 
 </Steps>
