@@ -1,4 +1,5 @@
 import { Cards } from "nextra/components";
+import TechStackCard from "@/components/tech-stack-card";
 
 export const metadata = {
   title: "Deploy Next.js",
@@ -17,6 +18,10 @@ Choose your deployment platform to get started with deploying your Next.js appli
 
 ## Deployment platforms
 
-<Cards>
-  <Cards.Card title="AWS Lambda" href="/frameworks/nextjs/aws-lambda" />
-</Cards>
+<div className="grid mt-4 gap-8 lg:grid-cols-2">
+  <TechStackCard
+    href="/frameworks/nextjs/aws-lambda"
+    title="AWS Lambda"
+    icon="aws"
+  />
+</div>
