@@ -1,4 +1,5 @@
 import { Callout, Steps, Tabs, Cards } from "nextra/components";
+import TechStackCard from "@/components/tech-stack-card";
 
 export const metadata = {
   title: "Deploy Next.js to AWS Lambda",
@@ -6,13 +7,28 @@ export const metadata = {
 
 # Deploy Next.js to AWS Lambda
 
-Pros:
+Before you proceed, consider pros/cons of using AWS Lambda.
 
-- Great for preview/PR environments.
-- You only pay for what you use.
-- Can handle spiky traffic well.
+| Pros                              | Cons                                                      |
+| --------------------------------- | --------------------------------------------------------- |
+| Great for preview/PR environments | Possible issues with libraries like i18n for translations |
+| You only pay for what you use     | Can be hard to predict costs                              |
+| Can handle spiky traffic well     |                                                           |
 
-Cons:
+## Git repository providers
 
-- Possible issues with libraries like i18n for translations.
-- Can be hard to predict costs.
+Read docs for the Git repository provider you use:
+
+<div className="grid mt-4 gap-8 lg:grid-cols-2">
+  <TechStackCard
+    href="/providers/aws-iac"
+    title="GitHub"
+    icon="github"
+  />
+
+   <TechStackCard
+    href="/providers/cloudflare-iac"
+    title="GitLab"
+    icon="gitlab"
+  />
+</div>
