@@ -22,13 +22,23 @@ export default function HeroSection() {
             <div className="mx-auto">
               <div className="sm:mx-auto lg:mr-auto lg:mt-0">
                 <h1 className="mt-8 max-w-2xl text-balance text-5xl font-medium md:text-6xl lg:mt-16">
-                  Infrastructure guides
+                  Curated infrastructure guides
                 </h1>
 
                 <p className="mt-8 max-w-2xl text-muted-foreground text-pretty text-lg">
                   OpenDeployments is an open source collection of guides to help
                   you deploy your application directly to major cloud providers.
                 </p>
+
+                <ul className="text-muted-foreground mt-4">
+                  <li>- Your CI/CD pipelines.</li>
+
+                  <li>- Your infrastructure.</li>
+
+                  <li>- Your Git Ops.</li>
+
+                  <li>- Your ownership.</li>
+                </ul>
 
                 <div className="mt-12 flex items-center gap-2">
                   <div className="bg-foreground/10 rounded-[calc(var(--radius-xl)+0.125rem)] border p-0.5">
