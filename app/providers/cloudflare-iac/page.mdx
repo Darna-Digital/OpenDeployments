@@ -11,20 +11,20 @@ To manage DNS records and other Cloudflare services programmatically, you'll nee
 ```mermaid
 graph TB
     subgraph "AWS Infrastructure"
-        ALB[Application Load Balancer]
-        CF[CloudFront Distribution]
-        S3[S3 Bucket]
-        Lambda[Lambda Functions]
-        Fargate[Fargate]
+        ALB(Application Load Balancer)
+        CF(CloudFront Distribution)
+        S3(S3 Bucket)
+        Lambda(Lambda Functions)
+        Fargate(Fargate)
     end
 
     subgraph "Cloudflare"
-        DNS[DNS Management]
-        SSL[SSL/TLS]
+        DNS(DNS Management)
+        SSL(SSL/TLS)
     end
 
     subgraph "Your Domain"
-        Domain[yourdomain.com]
+        Domain(yourdomain.com)
     end
 
     Domain --> DNS
