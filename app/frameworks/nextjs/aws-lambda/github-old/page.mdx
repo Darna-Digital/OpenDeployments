@@ -1,0 +1,526 @@
+import { Callout, Steps, Tabs, FileTree } from 'nextra/components'
+
+export const metadata = {
+  title: 'Deploy Next.js to AWS Lambda with GitHub Actions',
+  description: 'Complete GitHub Actions workflow for deploying Next.js applications to AWS Lambda with automated CI/CD pipeline configuration.',
+  openGraph: {
+    title: 'Deploy Next.js to AWS Lambda with GitHub Actions',
+    description: 'Complete GitHub Actions workflow for deploying Next.js to AWS Lambda.',
+  },
+}
+
+# Deploy Next.js to AWS Lambda with GitHub Actions
+
+Automate your Next.js deployments to AWS Lambda using GitHub Actions. This guide covers setting up CI/CD pipelines for both staging and production environments.
+
+## Prerequisites
+
+<Steps>
+
+### Configure AWS Credentials
+
+Store your AWS credentials as GitHub repository secrets:
+
+1. Navigate to your repository on GitHub
+2. Go to **Settings** → **Secrets and variables** → **Actions**
+3. Click **New repository secret**
+4. Add the following secrets:
+
+| Secret Name | Description |
+|-------------|-------------|
+| `AWS_ACCESS_KEY_ID` | Your AWS access key ID |
+| `AWS_SECRET_ACCESS_KEY` | Your AWS secret access key |
+
+<Callout type="warning">
+Use an IAM user with minimal required permissions. Never use root account credentials.
+</Callout>
+
+### Set Up AWS IAM Permissions
+
+Your IAM user needs the following permissions:
+
+```json filename="iam-policy.json"
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "lambda:*",
+        "cloudformation:*",
+        "s3:*",
+        "cloudfront:*",
+        "iam:*",
+        "apigateway:*",
+        "route53:*",
+        "acm:*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+<Callout type="info">
+For production, refine these permissions to follow the principle of least privilege.
+</Callout>
+
+### Optional: CloudFlare Secrets
+
+If using CloudFlare for DNS, add these secrets:
+
+| Secret Name | Description |
+|-------------|-------------|
+| `CLOUDFLARE_API_TOKEN` | CloudFlare API token |
+| `CLOUDFLARE_DEFAULT_ACCOUNT_ID` | CloudFlare account ID |
+| `CLOUDFLARE_EMAIL` | CloudFlare account email |
+
+</Steps>
+
+## Workflow Configuration
+
+### Production Deployment
+
+Create a workflow for production deployments on the main branch:
+
+<FileTree>
+  <FileTree.Folder name=".github" defaultOpen>
+    <FileTree.Folder name="workflows" defaultOpen>
+      <FileTree.File name="production.yml" />
+    </FileTree.Folder>
+  </FileTree.Folder>
+</FileTree>
+
+```yaml filename=".github/workflows/production.yml" copy
+name: Deploy Production
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: "production"
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+  AWS_SDK_LOAD_CONFIG: 0
+  STAGE: "production"
+
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+    environment: Production
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to AWS
+        env:
+          CI: true
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ env.AWS_REGION }}
+          AWS_PROFILE: "default"
+          AWS_SDK_LOAD_CONFIG: 1
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set region ${{ env.AWS_REGION }}
+          pnpm sst deploy --stage=${{ env.STAGE }}
+```
+
+### Staging Deployment
+
+Create a separate workflow for staging deployments:
+
+```yaml filename=".github/workflows/staging.yml" copy
+name: Deploy Staging
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: "staging-${{ github.ref }}"
+  cancel-in-progress: true
+
+env:
+  AWS_REGION: us-east-1
+  STAGE: "staging"
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    environment: Staging
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to AWS
+        run: pnpm sst deploy --stage=${{ env.STAGE }}
+```
+
+## Workflow Breakdown
+
+### Trigger Configuration
+
+<Tabs items={['Production', 'Staging', 'Manual']}>
+  <Tabs.Tab>
+```yaml
+on:
+  push:
+    branches: [main]
+```
+Deploys automatically when code is pushed to the `main` branch.
+  </Tabs.Tab>
+  <Tabs.Tab>
+```yaml
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    types: [opened, synchronize, reopened]
+```
+Deploys on pushes to `develop` or when PRs are opened/updated.
+  </Tabs.Tab>
+  <Tabs.Tab>
+```yaml
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: 'Deployment stage'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+```
+Allows manual deployment via GitHub Actions UI.
+  </Tabs.Tab>
+</Tabs>
+
+### Concurrency Control
+
+Prevent multiple deployments from running simultaneously:
+
+```yaml
+concurrency:
+  group: "production"
+  cancel-in-progress: false
+```
+
+| Setting | Description |
+|---------|-------------|
+| `group` | Identifies which workflows share concurrency |
+| `cancel-in-progress: false` | Queues new deployments instead of canceling |
+| `cancel-in-progress: true` | Cancels running deployments for new ones |
+
+<Callout type="info">
+Use `cancel-in-progress: false` for production to prevent incomplete deployments.
+</Callout>
+
+### Environment Configuration
+
+Use GitHub Environments for additional protection:
+
+```yaml
+environment: Production
+permissions:
+  contents: read
+  id-token: write
+```
+
+Benefits:
+- **Required reviewers** before deployment
+- **Wait timers** for staged rollouts
+- **Deployment branches** restrictions
+- **Environment secrets** scoped to specific environments
+
+### Package Manager Setup
+
+<Tabs items={['pnpm', 'npm', 'yarn']}>
+  <Tabs.Tab>
+```yaml
+- name: Setup pnpm
+  uses: pnpm/action-setup@v4
+  with:
+    version: latest
+
+- name: Setup Node.js
+  uses: actions/setup-node@v4
+  with:
+    node-version: "22"
+    cache: "pnpm"
+
+- name: Install dependencies
+  run: pnpm install --frozen-lockfile
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+```yaml
+- name: Setup Node.js
+  uses: actions/setup-node@v4
+  with:
+    node-version: "22"
+    cache: "npm"
+
+- name: Install dependencies
+  run: npm ci
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+```yaml
+- name: Setup Node.js
+  uses: actions/setup-node@v4
+  with:
+    node-version: "22"
+    cache: "yarn"
+
+- name: Install dependencies
+  run: yarn install --frozen-lockfile
+```
+  </Tabs.Tab>
+</Tabs>
+
+## Advanced Configurations
+
+### With CloudFlare DNS
+
+If using CloudFlare for DNS management:
+
+```yaml filename=".github/workflows/production.yml" {5-7,28-30}
+env:
+  AWS_REGION: us-east-1
+  AWS_SDK_LOAD_CONFIG: 0
+  STAGE: "production"
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_DEFAULT_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
+  CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
+
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+    steps:
+      # ... previous steps ...
+
+      - name: Deploy to AWS
+        env:
+          CI: true
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ env.AWS_REGION }}
+          AWS_PROFILE: "default"
+          AWS_SDK_LOAD_CONFIG: 1
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_DEFAULT_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
+          CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
+        run: pnpm sst deploy --stage=${{ env.STAGE }}
+```
+
+### With Build Cache
+
+Speed up deployments by caching build outputs:
+
+```yaml {1-4}
+- name: Cache SST build
+  uses: actions/cache@v4
+  with:
+    path: .sst
+    key: ${{ runner.os }}-sst-${{ hashFiles('**/pnpm-lock.yaml') }}
+    restore-keys: |
+      ${{ runner.os }}-sst-
+
+- name: Deploy to AWS
+  run: pnpm sst deploy --stage=${{ env.STAGE }}
+```
+
+### With Automated Tests
+
+Run tests before deployment:
+
+```yaml
+- name: Install dependencies
+  run: pnpm install --frozen-lockfile
+
+- name: Run linter
+  run: pnpm lint
+
+- name: Run type check
+  run: pnpm tsc --noEmit
+
+- name: Run tests
+  run: pnpm test
+
+- name: Deploy to AWS
+  run: pnpm sst deploy --stage=${{ env.STAGE }}
+```
+
+### With Notifications
+
+Send deployment notifications to Slack:
+
+```yaml
+- name: Deploy to AWS
+  id: deploy
+  run: pnpm sst deploy --stage=${{ env.STAGE }}
+
+- name: Notify Slack
+  if: always()
+  uses: 8398a7/action-slack@v3
+  with:
+    status: ${{ job.status }}
+    text: 'Production deployment ${{ job.status }}'
+    webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+```
+
+## Multi-Environment Workflow
+
+Deploy to multiple environments in a single workflow:
+
+```yaml filename=".github/workflows/deploy.yml"
+name: Deploy
+
+on:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: 'Deployment stage'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  determine-stage:
+    runs-on: ubuntu-latest
+    outputs:
+      stage: ${{ steps.set-stage.outputs.stage }}
+    steps:
+      - name: Determine deployment stage
+        id: set-stage
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "stage=${{ github.event.inputs.stage }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "stage=production" >> $GITHUB_OUTPUT
+          else
+            echo "stage=staging" >> $GITHUB_OUTPUT
+          fi
+
+  deploy:
+    needs: determine-stage
+    runs-on: ubuntu-latest
+    environment: ${{ needs.determine-stage.outputs.stage }}
+    steps:
+      # ... deployment steps ...
+      - name: Deploy to AWS
+        run: pnpm sst deploy --stage=${{ needs.determine-stage.outputs.stage }}
+```
+
+## Troubleshooting
+
+### Deployment Fails with Permission Error
+
+<Callout type="error">
+**Error**: User is not authorized to perform: lambda:CreateFunction
+</Callout>
+
+**Solution**: Ensure your IAM user has the necessary permissions. Review the [IAM policy](#set-up-aws-iam-permissions) above.
+
+### Workflow Times Out
+
+If deployments exceed GitHub's timeout:
+
+```yaml {3-4}
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+```
+
+Default timeout is 360 minutes. Reduce for faster failure detection.
+
+### CloudFormation Stack Errors
+
+If deployment fails due to existing resources:
+
+```bash
+pnpm sst remove --stage=production
+pnpm sst deploy --stage=production
+```
+
+<Callout type="warning">
+This will delete all resources. Use with caution in production.
+</Callout>
+
+## Best Practices
+
+| Practice | Benefit |
+|----------|---------|
+| Use GitHub Environments | Add manual approval gates |
+| Enable branch protection | Require PR reviews before merge |
+| Use concurrency controls | Prevent deployment conflicts |
+| Cache dependencies | Faster workflow execution |
+| Run tests before deploy | Catch errors early |
+| Use semantic versioning | Track deployment history |
+
+## Next Steps
+
+- [Configure GitLab CI](/frameworks/nextjs/aws-lambda/gitlab)
+- [Back to AWS Lambda guide](/frameworks/nextjs/aws-lambda)
+- [Learn more about SST](https://sst.dev)
