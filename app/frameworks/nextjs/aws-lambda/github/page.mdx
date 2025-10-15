@@ -26,7 +26,7 @@ You can do this by following the [get started](/get-started) guide.
 
 This example works with the "main" branch.
 
-```yaml
+```yaml copy filename="./github/workflows/production.yml"
 name: Deploy Production
 
 on:
@@ -99,11 +99,14 @@ jobs:
 
 ## Setup SST
 
-2.1. Add sst.config.ts configuration
-2.2 This example uses "open-deployments" name. Name it by your own app name.
-2.3 This example uses opendeployments.com domain. Use your own domain name.
+Add sst.config.ts configuration.
 
-```ts
+Note:
+
+- 2.2 This example uses "open-deployments" name. Name it by your own app name.
+- 2.3 This example uses opendeployments.com domain. Use your own domain name.
+
+```ts copy filename="sst.config.ts"
 export default $config({
   app(input) {
     return {
