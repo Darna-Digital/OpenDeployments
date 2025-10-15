@@ -10,69 +10,12 @@ To manage DNS records and other Cloudflare services programmatically, you'll nee
 - At least one domain added to Cloudflare
 - Domain must be using Cloudflare nameservers
 
-## Authentication Methods
-
-Cloudflare provides two main authentication methods:
-
-### 1. API Tokens (Recommended)
-
-- More secure with fine-grained permissions
-- Can be scoped to specific zones and resources
-- Supports IP restrictions and TTL
-
-### 2. Global API Key (Legacy)
-
-- Full account access
-- Less secure but simpler to set up
-- Not recommended for production use
-
-## Method 1: API Token (Recommended)
+## Getting API Token
 
 ### Step 1: Create an API Token
 
 1. Log in to the [Cloudflare Dashboard](https://dash.cloudflare.com/)
 2. Go to **My Profile** → **API Tokens**
 3. Click **Create Token**
-4. Choose **Custom token** for maximum control
-
-### Step 2: Configure Token Permissions
-
-Set the following permissions based on your needs:
-
-#### For DNS Management:
-
-- **Zone** → **Zone Settings** → **Read**
-- **Zone** → **Zone** → **Read**
-- **Zone** → **DNS** → **Edit**
-
-#### For Additional Services (optional):
-
-- **Zone** → **Page Rules** → **Edit**
-- **Zone** → **SSL/TLS** → **Edit**
-- **Account** → **Cloudflare Tunnel** → **Edit**
-
-### Step 3: Scope the Token
-
-1. **Zone Resources**:
-
-   - Select **Include** → **Specific zone** → choose your domain(s)
-   - Or select **All zones** for account-wide access
-
-2. **Account Resources** (if needed):
-
-   - Select your account
-
-3. **Client IP Address Filtering** (optional but recommended):
-
-   - Add your server/CI IP addresses for extra security
-
-4. **TTL** (optional):
-   - Set an expiration date for the token
-
-### Step 4: Get Your Token
-
-1. Click **Continue to summary**
-2. Review the permissions
-3. Click **Create Token**
-4. **Important**: Copy the token immediately - it won't be shown again
-5. Test the token using the provided curl command
+4. Choose **Edit Zone DNS**
+5. Choose DNS zones and domains you want to manage.
