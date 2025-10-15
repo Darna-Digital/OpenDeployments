@@ -14,7 +14,7 @@ export default function TechStack({ title, href, icon, className }: Props) {
     <Link
       href={href}
       className={cn(
-        "flex border border-border items-center gap-4 bg-card rounded-lg p-4",
+        "flex border border-border items-center gap-4 transition hover:bg-card rounded-lg p-4",
         className
       )}
     >
