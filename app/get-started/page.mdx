@@ -1,5 +1,6 @@
 import Link from "next/link";
 import TechStackCard from "@/components/tech-stack-card";
+import { Steps, Callout } from "nextra/components";
 
 # Get started
 
@@ -23,15 +24,30 @@ Get started by configuring infrastructure providers:
 
 ## Prerequisites
 
+<Steps>
+
+### Get API keys
+
 Before you can start deploying you should have the following secrets:
 
-| Secret Name | Provider | Description |
-|-------------|----------|-------------|
-| CLOUDFLARE_API_TOKEN | Cloudflare | API token for Cloudflare access |
-| CLOUDFLARE_DEFAULT_ACCOUNT_ID | Cloudflare | Your default Cloudflare account ID |
-| CLOUDFLARE_EMAIL | Cloudflare | Email associated with your Cloudflare account |
-| AWS_ACCESS_KEY_ID | AWS | AWS access key for authentication |
-| AWS_SECRET_ACCESS_KEY | AWS | AWS secret key for authentication |
+| Secret Name                   | Provider   | Description                                   |
+| ----------------------------- | ---------- | --------------------------------------------- |
+| CLOUDFLARE_API_TOKEN          | Cloudflare | API token for Cloudflare access               |
+| CLOUDFLARE_DEFAULT_ACCOUNT_ID | Cloudflare | Your default Cloudflare account ID            |
+| CLOUDFLARE_EMAIL              | Cloudflare | Email associated with your Cloudflare account |
+| AWS_ACCESS_KEY_ID             | AWS        | AWS access key for authentication             |
+| AWS_SECRET_ACCESS_KEY         | AWS        | AWS secret key for authentication             |
+
+<Callout type="info">
+  You can get these API keys by following the provider guides above.
+</Callout>
+
+### Setup Node.js
+
+- You will need Node.js for SST.
+- OpenDeployments uses pnpm as the default package manager, so you will need to install it too. Alternatively, you can adjust the given examples to your preffered package manager.
+
+</Steps>
 
 ## Frameworks
 
