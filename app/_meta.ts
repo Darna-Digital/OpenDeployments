@@ -7,4 +7,5 @@ export default {
   "get-started": "Get started",
   providers: "Providers",
   frameworks: "Frameworks",
+  contributors: "Contributors",
 };

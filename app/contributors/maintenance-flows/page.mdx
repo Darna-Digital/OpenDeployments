@@ -1,0 +1,173 @@
+import { Steps, Callout } from "nextra/components";
+
+export const metadata = {
+  title: "Maintenance Flows",
+  description:
+    "Documentation of maintenance workflows for managing example repositories and infrastructure deployments.",
+  openGraph: {
+    title: "Maintenance Flows - Open Deployments",
+    description:
+      "Learn how to manage and maintain example repositories and their infrastructure.",
+  },
+};
+
+# Maintenance Flows
+
+This document outlines the maintenance workflows used for managing example repositories and their associated infrastructure.
+
+## Overview
+
+The Open Deployments project maintains example repositories that demonstrate deployment patterns. Each example includes:
+
+- **Source code** - Working application with deployment configuration
+- **GitHub Actions workflows** - Automated CI/CD pipelines
+- **Infrastructure as Code** - SST configuration for cloud resources
+- **Documentation** - Guides and setup instructions
+
+## Example Repository: Next.js Lambda with GitHub Actions
+
+### Repository Structure
+
+```
+nextjs-lambda-github-actions/
+├── .github/
+│   └── workflows/
+│       ├── production.yml      # Deploy infrastructure
+│       └── remove-production.yml # Remove infrastructure
+├── app/                        # Next.js application
+├── sst.config.ts              # SST infrastructure configuration
+└── package.json               # Dependencies and scripts
+```
+
+### Deployment Workflow
+
+<Steps>
+
+## Automatic Deployment
+
+The deployment workflow (`production.yml`) automatically triggers on pushes to the `main` branch:
+
+1. **Setup Environment** - Installs Node.js, pnpm, and dependencies
+2. **Configure AWS** - Sets up AWS credentials from GitHub secrets
+3. **Deploy Infrastructure** - Runs `pnpm sst deploy --stage=production`
+
+Required GitHub secrets:
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `CLOUDFLARE_API_TOKEN` (optional, for custom domains)
+- `CLOUDFLARE_DEFAULT_ACCOUNT_ID` (optional)
+- `CLOUDFLARE_EMAIL` (optional)
+
+## Manual Infrastructure Removal
+
+The removal workflow (`remove-production.yml`) requires manual trigger with confirmation:
+
+1. Navigate to **Actions** tab in GitHub repository
+2. Select **"Remove Production Infrastructure"** workflow
+3. Click **"Run workflow"**
+4. Type `DESTROY` in the confirmation field
+5. Execute the workflow
+
+</Steps>
+
+### Safety Features
+
+<Callout type="warning">
+The removal workflow includes multiple safety measures:
+- **Manual trigger only** - Prevents accidental execution
+- **Confirmation required** - Must type "DESTROY" to proceed
+- **Environment protection** - Uses Production environment rules
+- **Clear validation** - Workflow fails if confirmation is incorrect
+</Callout>
+
+## Infrastructure Management
+
+### SST Configuration
+
+The `sst.config.ts` file defines the infrastructure:
+
+```typescript
+export default $config({
+  app(input) {
+    return {
+      name: "nextjs-lambda-github-actions",
+      removal: input?.stage === "production" ? "retain" : "remove",
+      protect: ["production"].includes(input?.stage),
+      home: "aws",
+      providers: {
+        aws: { region: "us-east-1" },
+        cloudflare: "latest",
+      },
+    };
+  },
+  async run() {
+    new sst.aws.Nextjs("NextjsLambdaGithubActionsWebsite", {
+      domain: isProduction ? {
+        name: "your-domain.com",
+        dns: sst.cloudflare.dns(),
+      } : undefined,
+    });
+  },
+});
+```
+
+### Stage Management
+
+- **Production stage** - Protected with retention policies
+- **Development stages** - Auto-cleanup enabled
+- **Domain configuration** - Optional custom domain setup
+
+## Workflow Maintenance
+
+### Adding New Examples
+
+When creating new example repositories:
+
+1. **Copy base structure** from existing examples
+2. **Update repository name** in all configuration files
+3. **Configure GitHub secrets** for the new repository
+4. **Test deployment workflow** before making repository public
+5. **Document in Open Deployments** website
+
+### Updating Existing Examples
+
+For updates to existing examples:
+
+1. **Test changes locally** before pushing
+2. **Review infrastructure changes** in SST config
+3. **Update documentation** if workflow changes
+4. **Verify GitHub Actions** still work correctly
+
+### Security Considerations
+
+- **Secrets management** - Use GitHub secrets, never commit credentials
+- **Environment protection** - Enable branch protection and environment rules
+- **Least privilege** - AWS IAM roles with minimal required permissions
+- **Regular rotation** - Rotate AWS access keys periodically
+
+## Troubleshooting
+
+### Common Issues
+
+**Deployment Failures:**
+- Check AWS credentials and permissions
+- Verify SST configuration syntax
+- Review CloudFormation stack errors in AWS console
+
+**GitHub Actions Failures:**
+- Validate required secrets are configured
+- Check Node.js version compatibility
+- Review pnpm lockfile for dependency issues
+
+**Infrastructure State Issues:**
+- Use `sst refresh` to sync state
+- Check for manual AWS resource changes
+- Review SST state in `.sst/` directory
+
+### Recovery Procedures
+
+If infrastructure gets into an inconsistent state:
+
+1. **Manual cleanup** - Remove resources via AWS console
+2. **State reset** - Delete `.sst/` directory and redeploy
+3. **Fresh deployment** - Create new stage and migrate resources
