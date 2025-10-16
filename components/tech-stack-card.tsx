@@ -7,9 +7,16 @@ interface Props {
   href: string;
   icon: string;
   className?: string;
+  iconClassName?: string;
 }
 
-export default function TechStack({ title, href, icon, className }: Props) {
+export default function TechStack({
+  title,
+  href,
+  icon,
+  className,
+  iconClassName,
+}: Props) {
   return (
     <Link
       href={href}
@@ -22,13 +29,13 @@ export default function TechStack({ title, href, icon, className }: Props) {
         <StackIcon
           variant="dark"
           name={icon!}
-          className="size-[3rem] hidden! dark:block!"
+          className={cn("size-[3rem] hidden! dark:block!", iconClassName)}
         />
 
         <StackIcon
           variant="light"
           name={icon!}
-          className="size-[3rem] block dark:hidden!"
+          className={cn("size-[3rem] block dark:hidden!", iconClassName)}
         />
       </div>
 
