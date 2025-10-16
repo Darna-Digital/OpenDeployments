@@ -4,7 +4,7 @@ export default {
     display: "hidden",
   },
   about: "About",
-  "get-started": "Get Started",
+  "get-started": "Get started",
   providers: "Providers",
   frameworks: "Frameworks",
 };
