@@ -1,4 +1,4 @@
 export default {
-  "maintenance-flows": "Maintenance Flows",
-  "project-architecture": "Project Architecture",
+  "maintenance-flows": "[WIP] Maintenance Flows",
+  "project-architecture": "[WIP] Project Architecture",
 };
