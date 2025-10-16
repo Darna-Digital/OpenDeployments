@@ -6,6 +6,7 @@ interface Props {
   title: string;
   href: string;
   icon: string;
+  linkTarget?: string;
   className?: string;
   iconClassName?: string;
 }
@@ -14,6 +15,7 @@ export default function TechStack({
   title,
   href,
   icon,
+  linkTarget,
   className,
   iconClassName,
 }: Props) {
@@ -24,6 +26,7 @@ export default function TechStack({
         "flex border border-border items-center gap-4 transition hover:bg-card rounded-lg p-4",
         className
       )}
+      target={linkTarget ? linkTarget : undefined}
     >
       <div className="flex items-center justify-center">
         <StackIcon
