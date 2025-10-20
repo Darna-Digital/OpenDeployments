@@ -35,9 +35,9 @@ You can find the finished example here:
 
 ## Prerequisites
 
-Before you start make sure to configure your infrastructure providers.
+Before you start make sure to configure the IAC setup for Next.js AWS Lambda
 
-You can do this by following the [get started](/get-started) guide.
+You can do this by [following this](/frameworks/nextjs/aws-lambda) guide.
 
 ## Guide
 
@@ -117,48 +117,7 @@ You can do this by following the [get started](/get-started) guide.
         configuration.
     </Callout>
 
-    ### Setup SST
-
-    Add sst.config.ts configuration. To initialize SST you can run:
-
-    `pnpm dlx sst init`
-
-    Note:
-
-    - 2.2 This example uses "open-deployments" name. Name it by your own app name.
-    - 2.3 This example uses opendeployments.com domain. Use your own domain name.
-
-    ```ts copy filename="sst.config.ts"
-    export default $config({
-      app(input) {
-        return {
-          name: "open-deployments",
-          removal: input?.stage === "production" ? "retain" : "remove",
-          protect: ["production"].includes(input?.stage),
-          home: "aws",
-          providers: {
-            aws: {
-              region: "us-east-1",
-              profile: input.stage === "production" ? "production" : undefined,
-            },
-            cloudflare: "latest",
-          },
-        };
-      },
-      async run() {
-        const isProduction = $app.stage === "production";
-
-        new sst.aws.Nextjs("OpenDeploymentsWebsite", {
-          domain: isProduction
-            ? {
-                name: "opendeployments.com",
-                dns: sst.cloudflare.dns(),
-                aliases: ["www.opendeployments.com"],
-              }
-            : undefined,
-        });
-      },
-    });
-    ```
+    ### Push a change to pipeline
+    Your GitHub pipelines will deploy changes pushed to the `main` branch.
 
 </Steps>
