@@ -3,8 +3,29 @@ import { Steps, Callout } from 'nextra/components'
 
 # Get started
 
+## Prerequisites
+
 <Steps>
-    ## Configure infrastructure providers
+    ### Configure a Git Ops provider
+
+    OpenDeployments currently support GitHub and GitLab. The guides will be provided for both of them, so you can pick the one and your team prefer.
+
+    <div className="grid mt-4 gap-8 lg:grid-cols-2">
+        <TechStackCard
+            href="https://github.com"
+            linkTarget="_blank"
+            title="GitHub"
+            icon="github"
+        />
+
+        <TechStackCard
+            href="https://gitlab.com"
+            title="GitLab"
+            icon="gitlab"
+        />
+    </div>
+
+    ### Configure infrastructure providers
 
     This is where your application code will run.
 
@@ -16,7 +37,7 @@ import { Steps, Callout } from 'nextra/components'
         />
     </div>
 
-    ## Configure DNS providers
+    ### Configure DNS providers
 
     This is where your public facing domain will be configured.
 
@@ -32,26 +53,6 @@ import { Steps, Callout } from 'nextra/components'
 
     - You will need Node.js for SST.
     - OpenDeployments uses `pnpm` as the default package manager, so you will need to install it too. Alternatively, you can adjust the given examples to your preffered package manager.
-
-    ### Configure a Git Ops provider
-
-    OpenDeployments currently support GitHub and GitLab. The guides will be provided for both of them, so you can pick the one and your team prefer.
-
-    <div className="grid mt-4 gap-8 lg:grid-cols-2">
-        <TechStackCard
-        href="https://github.com"
-        linkTarget="_blank"
-        title="GitHub"
-        icon="github"
-        />
-
-        <TechStackCard
-        href="https://gitlab.com"
-        title="GitLab"
-        icon="gitlab"
-        />
-    </div>
-
 </Steps>
 
 ## Frameworks
