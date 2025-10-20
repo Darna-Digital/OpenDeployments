@@ -1,51 +1,50 @@
-import Link from "next/link";
-import TechStackCard from "@/components/tech-stack-card";
-import { Steps, Callout } from "nextra/components";
+import TechStackCard from '@/components/tech-stack-card'
+import { Steps, Callout } from 'nextra/components'
 
 # Get started
 
-## Configure providers
-
-Get started by configuring infrastructure providers:
-
-<div className="grid mt-4 gap-8 lg:grid-cols-2">
-  <TechStackCard
-    href="/providers/aws-iac"
-    title="Amazon Web Services"
-    icon="aws"
-  />
-
-   <TechStackCard
-    href="/providers/cloudflare-iac"
-    title="Cloudflare"
-    icon="cloudflare"
-  />
-</div>
-
-## Prerequisites
-
 <Steps>
+    ## Configure providers
 
-### Get API keys
+    Get started by configuring infrastructure providers:
 
-Before you can start deploying you should have the following secrets:
+    <div className="grid mt-4 gap-8 lg:grid-cols-2">
+        <TechStackCard
+        href="/providers/aws-iac"
+        title="Amazon Web Services"
+        icon="aws"
+        />
 
-| Secret Name                   | Provider   | Description                                   |
-| ----------------------------- | ---------- | --------------------------------------------- |
-| CLOUDFLARE_API_TOKEN          | Cloudflare | API token for Cloudflare access               |
-| CLOUDFLARE_DEFAULT_ACCOUNT_ID | Cloudflare | Your default Cloudflare account ID            |
-| CLOUDFLARE_EMAIL              | Cloudflare | Email associated with your Cloudflare account |
-| AWS_ACCESS_KEY_ID             | AWS        | AWS access key for authentication             |
-| AWS_SECRET_ACCESS_KEY         | AWS        | AWS secret key for authentication             |
+        <TechStackCard
+        href="/providers/cloudflare-iac"
+        title="Cloudflare"
+        icon="cloudflare"
+        />
+    </div>
 
-<Callout type="info">
-  You can get these API keys by following the provider guides above.
-</Callout>
+    ### Setup Node.js
 
-### Setup Node.js
+    - You will need Node.js for SST.
+    - OpenDeployments uses `pnpm` as the default package manager, so you will need to install it too. Alternatively, you can adjust the given examples to your preffered package manager.
 
-- You will need Node.js for SST.
-- OpenDeployments uses pnpm as the default package manager, so you will need to install it too. Alternatively, you can adjust the given examples to your preffered package manager.
+    ### Configure a Git Ops provider
+
+    OpenDeployments currently support GitHub and GitLab. The guides will be provided for both of them, so you can pick the one and your team prefer.
+
+    <div className="grid mt-4 gap-8 lg:grid-cols-2">
+        <TechStackCard
+        href="https://github.com"
+        linkTarget="_blank"
+        title="GitHub"
+        icon="github"
+        />
+
+        <TechStackCard
+        href="https://gitlab.com"
+        title="GitLab"
+        icon="gitlab"
+        />
+    </div>
 
 </Steps>
 

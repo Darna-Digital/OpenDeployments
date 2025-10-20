@@ -1,4 +1,4 @@
-import { Callout, Steps } from "nextra/components";
+import { Callout, Steps } from 'nextra/components'
 
 # Cloudflare IAC
 
@@ -94,5 +94,15 @@ graph TB
             - Never commit API tokens to version control systems
         </div>
     </Callout>
+
+    ### End result
+
+    By the end you should have the following keys:
+
+    | Secret Name                   | Provider   | Description                                   |
+    | ----------------------------- | ---------- | --------------------------------------------- |
+    | CLOUDFLARE_API_TOKEN          | Cloudflare | API token for Cloudflare access               |
+    | CLOUDFLARE_DEFAULT_ACCOUNT_ID | Cloudflare | Your default Cloudflare account ID            |
+    | CLOUDFLARE_EMAIL              | Cloudflare | Email associated with your Cloudflare account |
 
 </Steps>

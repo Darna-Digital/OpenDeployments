@@ -171,3 +171,109 @@ If infrastructure gets into an inconsistent state:
 1. **Manual cleanup** - Remove resources via AWS console
 2. **State reset** - Delete `.sst/` directory and redeploy
 3. **Fresh deployment** - Create new stage and migrate resources
+
+## Example Repository: Next.js Lambda with GitLab CI
+
+### Repository Structure
+
+```
+nextjs-lambda-gitlab-ci/
+├── .gitlab-ci.yml             # GitLab CI/CD pipeline
+├── app/                       # Next.js application
+├── sst.config.ts             # SST infrastructure configuration
+└── package.json              # Dependencies and scripts
+```
+
+### GitLab CI/CD Pipeline
+
+The `.gitlab-ci.yml` file defines two main stages:
+
+<Steps>
+
+## Automatic Deployment
+
+The deployment job automatically triggers on pushes to the `main` branch:
+
+1. **Setup Environment** - Installs Node.js, pnpm, and AWS CLI
+2. **Configure AWS** - Sets up AWS credentials from GitLab variables
+3. **Deploy Infrastructure** - Runs `pnpm sst deploy --stage=production-example`
+
+Required GitLab CI/CD variables (Settings → CI/CD → Variables):
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `CLOUDFLARE_API_TOKEN` (optional, for custom domains)
+- `CLOUDFLARE_DEFAULT_ACCOUNT_ID` (optional)
+- `CLOUDFLARE_EMAIL` (optional)
+
+## Manual Infrastructure Removal
+
+The removal job requires manual execution through GitLab UI:
+
+1. Navigate to **CI/CD → Pipelines** in GitLab project
+2. Click **"Run pipeline"**
+3. Select the **"remove-production"** job
+4. Click **"Run job"** to execute
+
+</Steps>
+
+### GitLab CI/CD Configuration
+
+<Callout type="info">
+GitLab CI/CD uses different syntax and features compared to GitHub Actions:
+- **Variables** instead of secrets
+- **Rules** instead of workflow conditions
+- **Manual jobs** for infrastructure removal
+- **Environment protection** through GitLab environments
+</Callout>
+
+### Pipeline Safety Features
+
+- **Manual execution only** - Removal job requires manual trigger
+- **Environment protection** - Uses `production` environment
+- **Branch restrictions** - Deploy only triggers on `main` branch
+- **Proper AWS configuration** - Credentials set via AWS CLI
+
+### GitLab-Specific Maintenance
+
+**Setting up GitLab Variables:**
+1. Go to Project Settings → CI/CD → Variables
+2. Add required AWS credentials as **masked** variables
+3. Add optional Cloudflare variables if using custom domains
+4. Ensure variables are available to protected branches
+
+**Managing Environments:**
+1. Configure `production` environment in Project Settings
+2. Set deployment restrictions and approvals if needed
+3. Monitor deployments through Environments page
+
+**Pipeline Monitoring:**
+1. View pipeline status in CI/CD → Pipelines
+2. Check job logs for deployment details
+3. Monitor AWS resources through GitLab integration (if configured)
+
+### Differences from GitHub Actions
+
+| Feature | GitHub Actions | GitLab CI |
+|---------|----------------|-----------|
+| Secrets Management | GitHub Secrets | GitLab Variables |
+| Manual Triggers | `workflow_dispatch` | `when: manual` |
+| Environment Protection | GitHub Environments | GitLab Environments |
+| Conditional Execution | `if` conditions | `rules` syntax |
+| Docker Support | External actions | Built-in Docker support |
+
+### GitLab Troubleshooting
+
+**Pipeline Failures:**
+- Check GitLab variables are set correctly and marked as masked
+- Verify runner has access to required resources
+- Review job logs for specific error messages
+
+**AWS Permission Issues:**
+- Ensure GitLab variables match AWS credential requirements
+- Verify AWS CLI configuration in pipeline logs
+- Check IAM permissions for deployment operations
+
+**Runner Issues:**
+- Verify GitLab runner availability and capacity
+- Check runner tags and job requirements match
+- Monitor runner performance and resource usage

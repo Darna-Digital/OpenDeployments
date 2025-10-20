@@ -42,7 +42,7 @@ export default function TechStack({
         />
       </div>
 
-      <h3 className="font-medium">{title}</h3>
+      <span className="font-medium">{title}</span>
     </Link>
   );
 }
