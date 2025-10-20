@@ -4,21 +4,27 @@ import { Steps, Callout } from 'nextra/components'
 # Get started
 
 <Steps>
-    ## Configure providers
+    ## Configure infrastructure providers
 
-    Get started by configuring infrastructure providers:
+    This is where your application code will run.
 
     <div className="grid mt-4 gap-8 lg:grid-cols-2">
         <TechStackCard
-        href="/providers/aws-iac"
-        title="Amazon Web Services"
-        icon="aws"
+            href="/providers/aws-iac"
+            title="Amazon Web Services"
+            icon="aws"
         />
+    </div>
 
+    ## Configure DNS providers
+
+    This is where your public facing domain will be configured.
+
+    <div className="grid mt-4 gap-8 lg:grid-cols-2">
         <TechStackCard
-        href="/providers/cloudflare-iac"
-        title="Cloudflare"
-        icon="cloudflare"
+            href="/providers/cloudflare-iac"
+            title="Cloudflare"
+            icon="cloudflare"
         />
     </div>
 
