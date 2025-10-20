@@ -7,28 +7,92 @@ export const metadata = {
 
 # Deploy Next.js to AWS Lambda
 
-Before you proceed, consider pros/cons of using AWS Lambda.
+## Prerequisites
 
-| Pros                              | Cons                                                      |
-| --------------------------------- | --------------------------------------------------------- |
-| Great for preview/PR environments | Possible issues with libraries like i18n for translations |
-| You only pay for what you use     | Can be hard to predict costs                              |
-| Can handle spiky traffic well     |                                                           |
+Before you start make sure to configure your providers.
+
+You can do this by following the [get started](/get-started) guide.
+
+## Configure IAC
+
+<Steps>
+    ### Understand tradeoffs
+
+    Before you proceed, consider pros/cons of using AWS Lambda for deploying Next.js.
+
+    | Pros                              | Cons                                                      |
+    | --------------------------------- | --------------------------------------------------------- |
+    | Great for preview/PR environments | Possible issues with libraries like i18n for translations |
+    | You only pay for what you use     | Can be hard to predict costs                              |
+    | Can handle spiky traffic well     | Can be expensive for long running compute                 |
+
+
+    ### Setup SST
+
+    Add sst.config.ts configuration. To initialize SST you can run:
+
+    `pnpm dlx sst init`
+
+    ```ts copy filename="sst.config.ts"
+    export default $config({
+      app(input) {
+        return {
+          name: "open-deployments",
+          removal: input?.stage === "production" ? "retain" : "remove",
+          protect: ["production"].includes(input?.stage),
+          home: "aws",
+          providers: {
+            aws: {
+              region: "us-east-1",
+              profile: input.stage === "production" ? "production" : undefined,
+            },
+            cloudflare: "latest",
+          },
+        };
+      },
+      async run() {
+        const isProduction = $app.stage === "production";
+
+        new sst.aws.Nextjs("OpenDeploymentsWebsite", {
+          domain: isProduction
+            ? {
+                name: "opendeployments.com",
+                dns: sst.cloudflare.dns(),
+                aliases: ["www.opendeployments.com"],
+              }
+            : undefined,
+        });
+      },
+    });
+    ```
+
+    <Callout>
+        <>
+            2.2 This example uses "open-deployments" name. Name it by your own app name.
+
+            2.3 This example uses opendeployments.com domain. Use your own domain name.
+
+            2.4 This example uses "OpenDeploymentsWebsite" as the AWS resource name. Use your own name for easier navigation in the AWS Console in the future.
+        </>
+    </Callout>
+
+</Steps>
 
 ## Git Ops providers
 
 Read docs for the Git Ops provider you use:
 
 <div className="grid mt-4 gap-8 lg:grid-cols-2">
-  <TechStackCard
+    <TechStackCard
     href="/frameworks/nextjs/aws-lambda/github"
     title="GitHub"
     icon="github"
-  />
+    />
 
-   <TechStackCard
+    <TechStackCard
     href="/frameworks/nextjs/aws-lambda/gitlab"
     title="GitLab"
     icon="gitlab"
-  />
+    />
+
 </div>
